@@ -4,7 +4,7 @@ namespace CRUD_App.Repositories;
 
 public interface IContentRepository
 {
-    Task<Content?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<Content?> GetContentById(int id, CancellationToken ct = default);
 
 
     Task<List<Content>> GetAllContent(CancellationToken ct = default);

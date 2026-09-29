@@ -1,8 +1,7 @@
-using CRUD_App.Features.Articles.Commands;
-using CRUD_App.Features.Articles.Queries;
+using CRUD_App.Exceptions;
 using CRUD_App.RequestModels;
 using CRUD_App.ResponseModels;
-using MediatR;
+using CRUD_App.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRUD_App.Controllers;
@@ -13,14 +12,12 @@ namespace CRUD_App.Controllers;
 [Produces("application/json")]
 public class ArticlesController : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IArticleService _articleService;
 
-    public ArticlesController(IMediator mediator)
+    public ArticlesController(IArticleService articleService)
     {
-        _mediator = mediator;
+        _articleService = articleService;
     }
-
-
 
     /// <summary>
     /// Create new article
@@ -29,48 +26,57 @@ public class ArticlesController : ControllerBase
     /// please use Draft/Published/Unpublished as Status values.
     /// </remarks>
     [HttpPost]
-    [ProducesResponseType(typeof(ArticleResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ArticleResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ArticleResponse>> Create(ArticleCreateRequest request)
+    public async Task<ActionResult<ApiResponse<ArticleResponse>>> Create(ArticleCreateRequest request)
     {
-        var result = await _mediator.Send(new CreateArticleCommand(request.Status));
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-    }
+        var result = await _articleService.CreateArticle(request.Status);
 
+        var response = ApiResponse<ArticleResponse>.Success(
+            result, StatusCodes.Status201Created, $"Successfully created record with ID {result.Id}");
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, response);
+    }
 
     /// <summary>
     /// Gets all articles
     /// </summary>
     [HttpGet("getAll")]
-    [ProducesResponseType(typeof(List<ArticleResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<ArticleResponse>>> GetAll()
+    [ProducesResponseType(typeof(ApiResponse<List<ArticleResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ArticleResponse>>>> GetAll()
     {
-        var result = await _mediator.Send(new GetArticlesQuery());
-        return Ok(result);
+        var result = await _articleService.GetAllArticle();
+
+        return Ok(ApiResponse<List<ArticleResponse>>.Success(
+            result, StatusCodes.Status200OK, "Successfully retrieved records"));
     }
 
     /// <summary>
-    /// Gets a single article by Id.
+    /// Gets article by Id.
     /// </summary>
     [HttpGet("{id:int}/getById")]
-    [ProducesResponseType(typeof(ArticleResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ArticleResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ArticleResponse>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<ArticleResponse>>> GetById(int id)
     {
-        var result = await _mediator.Send(new GetArticleByIdQuery(id));
-        return Ok(result);
+        var result = await _articleService.GetArticleById(id);
+
+        return Ok(ApiResponse<ArticleResponse>.Success(
+            result, StatusCodes.Status200OK, $"Successfully retrieved record with ID {id}"));
     }
 
     /// <summary>
     /// Article details with list of its content items.
     /// </summary>
     [HttpGet("{id:int}/details")]
-    [ProducesResponseType(typeof(ArticleDetailsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ArticleDetailsResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ArticleDetailsResponse>> GetDetails(int id)
+    public async Task<ActionResult<ApiResponse<ArticleDetailsResponse>>> GetDetails(int id)
     {
-        var result = await _mediator.Send(new GetArticleDetailsQuery(id));
-        return Ok(result);
+        var result = await _articleService.GetArticleDetails(id);
+
+        return Ok(ApiResponse<ArticleDetailsResponse>.Success(
+            result, StatusCodes.Status200OK, $"Successfully retrieved details for record with ID {id}"));
     }
 
     /// <summary>
@@ -82,46 +88,63 @@ public class ArticlesController : ControllerBase
     /// - SortDir: Asc or Desc
     /// - Defaults to CreatedAt descending
     ///
-    /// Language defaults to English.
-    /// 
-    /// Filter by Status. (Draft/Published/Unpublished)
+    /// Filter by Status. (All/Draft/Published/Unpublished)
     /// </remarks>
     [HttpPost("filter")]
-    [ProducesResponseType(typeof(PagedResponse<ArticleListItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<PagedResponse<ArticleListItemResponse>>> Filter(ArticleFilterRequest request)
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<ArticleListItemResponse>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<ArticleListItemResponse>>>> Filter(ArticleFilterRequest request)
     {
-        var result = await _mediator.Send(new GetArticlesFilteredQuery(
-            request.Page, request.PageSize, request.SortBy, request.SortDir, request.Status));
+        var result = await _articleService.FilterArticle(
+            request.Page, request.PageSize, request.SortBy, request.SortDir, request.Status);
 
-        return Ok(result);
+        return Ok(ApiResponse<PagedResponse<ArticleListItemResponse>>.Success(
+            result, StatusCodes.Status200OK, "Successfully retrieved filtered records"));
     }
-
-
 
     /// <summary>
     /// Updates article
     /// </summary>
-    /// /// <remarks>
+    /// <remarks>
     /// please use Draft/Published/Unpublished as Status values.
     /// </remarks>
     [HttpPut("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Update(int id, ArticleUpdateRequest request)
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> Update(int id, ArticleUpdateRequest request)
     {
-        await _mediator.Send(new UpdateArticleCommand(id, request.Status));
-        return NoContent();
+        try
+        {
+            await _articleService.UpdateArticle(id, request.Status);
+
+            return Ok(ApiResponse<object>.Success(
+                new { }, StatusCodes.Status200OK, $"Successfully updated record with ID {id}"));
+        }
+        catch (NotFoundException)
+        {
+            return NotFound(ApiResponse<object>.Failure(
+                StatusCodes.Status404NotFound, $"Failed to update record with ID {id}"));
+        }
     }
 
     /// <summary>
-    /// Deletes an article. Any content referencing it is orphaned (ArticleId set to null).
+    /// Deletes an article
     /// </summary>
     [HttpDelete("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<object>>> Delete(int id)
     {
-        await _mediator.Send(new DeleteArticleCommand(id));
-        return NoContent();
+        try
+        {
+            await _articleService.DeleteArticle(id);
+
+            return Ok(ApiResponse<object>.Success(
+                new { }, StatusCodes.Status200OK, $"Successfully deleted record with ID {id}"));
+        }
+        catch (NotFoundException)
+        {
+            return NotFound(ApiResponse<object>.Failure(
+                StatusCodes.Status404NotFound, $"Failed to delete record with ID {id}"));
+        }
     }
 }

@@ -13,7 +13,7 @@ public class ContentRepository : IContentRepository
         _db = db;
     }
 
-    public Task<Content?> GetByIdAsync(int id, CancellationToken ct = default) =>
+    public Task<Content?> GetContentById(int id, CancellationToken ct = default) =>
         _db.Contents.Include(c => c.Author).FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public Task<List<Content>> GetAllContent(CancellationToken ct = default) =>
@@ -31,6 +31,7 @@ public class ContentRepository : IContentRepository
     {
         await _db.SaveChangesAsync(ct);
     }
+
 
     public async Task DeleteContent(Content content, CancellationToken ct = default)
     {

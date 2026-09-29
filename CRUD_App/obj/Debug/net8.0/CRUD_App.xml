@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CRUD_App</name>
+    </assembly>
+    <members>
+        <member name="T:CRUD_App.Controllers.ArticlesController">
+            <summary>CRUD and query endpoints for Articles.</summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.Create(CRUD_App.RequestModels.ArticleCreateRequest)">
+            <summary>
+            Create new article
+            </summary>
+            <remarks>
+            please use Draft/Published/Unpublished as Status values.
+            </remarks>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.GetAll">
+            <summary>
+            Gets all articles
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.GetById(System.Int32)">
+            <summary>
+            Gets article by Id.
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.GetDetails(System.Int32)">
+            <summary>
+            Article details with list of its content items.
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.Filter(CRUD_App.RequestModels.ArticleFilterRequest)">
+             <summary>
+             Filters and sorts articles.
+             </summary>
+             <remarks>
+             Sorting:
+             - SortBy: Title or CreatedAt
+             - SortDir: Asc or Desc
+             - Defaults to CreatedAt descending
+            
+             Filter by Status. (All/Draft/Published/Unpublished)
+             </remarks>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.Update(System.Int32,CRUD_App.RequestModels.ArticleUpdateRequest)">
+            <summary>
+            Updates article
+            </summary>
+            <remarks>
+            please use Draft/Published/Unpublished as Status values.
+            </remarks>
+        </member>
+        <member name="M:CRUD_App.Controllers.ArticlesController.Delete(System.Int32)">
+            <summary>
+            Deletes an article
+            </summary>
+        </member>
+        <member name="T:CRUD_App.Controllers.ContentsController">
+            <summary>CRUD and query endpoints for Content items.</summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ContentsController.Create(CRUD_App.RequestModels.ContentCreateRequest)">
+            <summary>
+            Create new content
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ContentsController.GetAll">
+            <summary>
+            Gets all content
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ContentsController.GetById(System.Int32)">
+            <summary>
+            Gets content item by Id
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ContentsController.Update(System.Int32,CRUD_App.RequestModels.ContentUpdateRequest)">
+            <summary>
+            Updates content
+            </summary>
+        </member>
+        <member name="M:CRUD_App.Controllers.ContentsController.Delete(System.Int32)">
+            <summary>
+            Deletes content
+            </summary>
+        </member>
+        <member name="T:CRUD_App.Exceptions.NotFoundException">
+            <summary>Thrown when a requested entity does not exist. Mapped to HTTP 404.</summary>
+        </member>
+        <member name="T:CRUD_App.Exceptions.ValidationException">
+            <summary>Thrown when a request references invalid/non-existent related data. Mapped to HTTP 400.</summary>
+        </member>
+        <member name="T:CRUD_App.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:CRUD_App.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:CRUD_App.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:CRUD_App.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:CRUD_App.Models.StatusFilter">
+            <summary>
+            Used only by the article filter endpoint; "All" means no status filter is applied.
+            </summary>
+        </member>
+        <member name="T:CRUD_App.ResponseModels.ApiResponse`1">
+            <summary>Standard response envelope returned by every endpoint.</summary>
+        </member>
+        <member name="M:CRUD_App.Services.IArticleService.GetArticleDetails(System.Int32,System.Threading.CancellationToken)">
+            <summary>Article details together with the full list of its content items.</summary>
+        </member>
+        <member name="M:CRUD_App.Services.IArticleService.FilterArticle(System.Int32,System.Int32,CRUD_App.Models.ArticleSortBy,CRUD_App.Models.SortDirection,CRUD_App.Models.StatusFilter,System.Threading.CancellationToken)">
+            <summary>
+            Paginated article list. Sorting by title prioritizes the article's English content title;
+            default sort is CreatedAt. Optionally filtered by article status.
+            </summary>
+        </member>
+    </members>
+</doc>

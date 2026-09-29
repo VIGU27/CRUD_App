@@ -1,5 +1,5 @@
 using CRUD_App.Exceptions;
-using Microsoft.AspNetCore.Mvc;
+using CRUD_App.ResponseModels;
 
 namespace CRUD_App.Middleware;
 
@@ -22,30 +22,26 @@ public class ExceptionHandlingMiddleware
         }
         catch (NotFoundException ex)
         {
-            await WriteProblem(context, StatusCodes.Status404NotFound, ex.Message);
+            await WriteResponse(context, StatusCodes.Status404NotFound, ex.Message);
         }
         catch (ValidationException ex)
         {
-            await WriteProblem(context, StatusCodes.Status400BadRequest, ex.Message);
+            await WriteResponse(context, StatusCodes.Status400BadRequest, ex.Message);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
-            await WriteProblem(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
+            await WriteResponse(context, StatusCodes.Status500InternalServerError, "An unexpected error occurred.");
         }
     }
 
-    private static async Task WriteProblem(HttpContext context, int statusCode, string message)
+    private static async Task WriteResponse(HttpContext context, int statusCode, string message)
     {
-        context.Response.ContentType = "application/problem+json";
+        context.Response.ContentType = "application/json";
         context.Response.StatusCode = statusCode;
 
-        var problem = new ProblemDetails
-        {
-            Status = statusCode,
-            Title = message
-        };
+        var response = ApiResponse<object?>.Failure(statusCode, message);
 
-        await context.Response.WriteAsJsonAsync(problem);
+        await context.Response.WriteAsJsonAsync(response);
     }
 }

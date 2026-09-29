@@ -12,6 +12,6 @@ public class UserRepository : IUserRepository
         _db = db;
     }
 
-    public Task<bool> ExistsAsync(int id, CancellationToken ct = default) =>
+    public Task<bool> UserExists(int id, CancellationToken ct = default) =>
         _db.Users.AnyAsync(u => u.Id == id, ct);
 }

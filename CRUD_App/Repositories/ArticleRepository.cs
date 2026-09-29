@@ -23,10 +23,11 @@ public class ArticleRepository : IArticleRepository
         await _db.Articles.OrderByDescending(a => a.CreatedAt).ToListAsync(ct);
 
 
-    public Task<Article?> GetByIdAsync(int id, CancellationToken ct = default) =>
+
+    public Task<Article?> GetArticleById(int id, CancellationToken ct = default) =>
         _db.Articles.FirstOrDefaultAsync(a => a.Id == id, ct);
 
-    public Task<Article?> GetWithContentsAsync(int id, CancellationToken ct = default) =>
+    public Task<Article?> GetArticleWithContents(int id, CancellationToken ct = default) =>
         _db.Articles
             .Include(a => a.Contents).ThenInclude(c => c.Author)
             .FirstOrDefaultAsync(a => a.Id == id, ct);
@@ -64,14 +65,12 @@ public class ArticleRepository : IArticleRepository
             query = query.Where(a => a.Status == status.Value);
         }
 
-        query = sortBy switch
+        query = (sortBy, sortDir) switch
         {
-            ArticleSortBy.Title => sortDir == SortDirection.Asc
-                ? query.OrderBy(a => a.Primary!.Title)
-                : query.OrderByDescending(a => a.Primary!.Title),
-            _ => sortDir == SortDirection.Asc
-                ? query.OrderBy(a => a.CreatedAt)
-                : query.OrderByDescending(a => a.CreatedAt)
+            (ArticleSortBy.Title, SortDirection.Asc) => query.OrderBy(a => a.Primary!.Title),
+            (ArticleSortBy.Title, SortDirection.Desc) => query.OrderByDescending(a => a.Primary!.Title),
+            (_, SortDirection.Asc) => query.OrderBy(a => a.CreatedAt),
+            _ => query.OrderByDescending(a => a.CreatedAt)
         };
 
         var totalCount = await query.CountAsync(ct);
